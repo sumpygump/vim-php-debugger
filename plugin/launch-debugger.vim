@@ -8,14 +8,14 @@ function! s:LaunchDebugger()
 
     " Load the debugger vim source with mappings and settings for the debugger
     " environment
-    if filereadable($VIMRUNTIME."/dbg_plugin/debugger.vim")
-        source $VIMRUNTIME/dbg_plugin/debugger.vim
-    elseif filereadable($HOME."/.vim/dbg_plugin/debugger.vim")
-        source $HOME/.vim/dbg_plugin/debugger.vim
-    elseif filereadable($HOME."/.vim/bundle/debugger/dbg_plugin/debugger.vim")
-        source $HOME/.vim/bundle/debugger/dbg_plugin/debugger.vim
+    if filereadable($VIMRUNTIME."/dbg_plugin/dbgpavim.vim")
+        source $VIMRUNTIME/dbg_plugin/dbgpavim.vim
+    elseif filereadable($HOME."/.vim/dbg_plugin/dbgpavim.vim")
+        source $HOME/.vim/dbg_plugin/dbgpavim.vim
+    elseif filereadable($HOME."/.vim/bundle/debugger/dbg_plugin/dbgpavim.vim")
+        source $HOME/.vim/bundle/debugger/dbg_plugin/dbgpavim.vim
     else
-        call confirm('launch-debugger.vim: Unable to find debugger.vim.', 'OK')
+        call confirm('launch-debugger.vim: Unable to find dbgpavim.vim.', 'OK')
     endif
 
     " Map Ctrl-F11 to exit debugger and restore original mappings
