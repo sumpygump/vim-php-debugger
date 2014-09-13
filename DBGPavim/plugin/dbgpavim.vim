@@ -4,26 +4,26 @@
 " Script Info and Documentation  {{{
 "=============================================================================
 "    Copyright: Copyright (C) 2012 Brook Hong
-"      License:	The MIT License
+"      License: The MIT License
 "
-"				Permission is hereby granted, free of charge, to any person obtaining
-"				a copy of this software and associated documentation files
-"				(the "Software"), to deal in the Software without restriction,
-"				including without limitation the rights to use, copy, modify,
-"				merge, publish, distribute, sublicense, and/or sell copies of the
-"				Software, and to permit persons to whom the Software is furnished
-"				to do so, subject to the following conditions:
+"       Permission is hereby granted, free of charge, to any person obtaining
+"       a copy of this software and associated documentation files
+"       (the "Software"), to deal in the Software without restriction,
+"       including without limitation the rights to use, copy, modify,
+"       merge, publish, distribute, sublicense, and/or sell copies of the
+"       Software, and to permit persons to whom the Software is furnished
+"       to do so, subject to the following conditions:
 "
-"				The above copyright notice and this permission notice shall be included
-"				in all copies or substantial portions of the Software.
+"       The above copyright notice and this permission notice shall be included
+"       in all copies or substantial portions of the Software.
 "
-"				THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-"				OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-"				MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-"				IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-"				CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-"				TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-"				SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+"       OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+"       MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+"       IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+"       CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+"       TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+"       SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 " Name Of File: dbgpavim.vim, dbgpavim.py
 "  Description: remote debugger interface to DBGp protocol
 "               The DBGPavim originates from http://www.vim.org/scripts/script.php?script_id=1152, with a new enhanced debugger engine.
@@ -87,11 +87,6 @@ endif
 
 " Load dbgpavim.py either from the same path where dbgpavim.vim is
 let s:dbgpavim_py = expand("<sfile>:p:h")."/dbgpavim.py"
-if filereadable(s:dbgpavim_py)
-  exec 'pyfile '.s:dbgpavim_py
-else
-  call confirm('dbgpavim.vim: Unable to find '.s:dbgpavim_py.'. Place it in either your home vim directory or in the Vim runtime directory.', 'OK')
-endif
 
 if !exists('g:dbgPavimPort')
   let g:dbgPavimPort = 9000
@@ -159,42 +154,59 @@ endif
 if !exists('g:dbgPavimKeySmallWindow')
   let g:dbgPavimKeySmallWindow = '<leader>-'
 endif
-exec 'map <silent> '.g:dbgPavimKeyRun.' :python dbgPavim.run()<cr>'
-exec 'map <silent> '.g:dbgPavimKeyQuit.' :python dbgPavim.quit()<cr>'
-exec 'map <silent> '.g:dbgPavimKeyToggleBae.' :call Bae()<cr>'
-exec 'map <silent> '.g:dbgPavimKeyToggleBp.' :python dbgPavim.mark()<cr>'
-exec 'map <silent> '.g:dbgPavimKeyLargeWindow.' :call ResizeWindow("+")<cr>'
-exec 'map <silent> '.g:dbgPavimKeySmallWindow.' :call ResizeWindow("-")<cr>'
-command! -nargs=? Bp python dbgPavim.mark('<args>')
-command! -nargs=0 Bl python dbgPavim.list()
-command! -nargs=? Dp python dbgPavim.cli('<args>')
-command! -nargs=? Wc python dbgPavim.watch("<args>")
-command! -nargs=? We python dbgPavim.eval("<args>")
-command! -nargs=0 Wl python dbgPavim.listWatch()
-command! -nargs=1 Children let g:dbgPavimMaxChildren=<args>|python dbgPavim.setMaxChildren()
-command! -nargs=1 Depth let g:dbgPavimMaxDepth=<args>|python dbgPavim.setMaxDepth()
-command! -nargs=1 Length let g:dbgPavimMaxData=<args>|python dbgPavim.setMaxData()
+if !exists('g:dbgPavimLang')
+  let g:dbgPavimLang = ''
+endif
 
-let s:keyMappings = {
-      \ g:dbgPavimKeyHelp : ':python dbgPavim.ui.help()<cr>',
-      \ g:dbgPavimKeyStepInto : ':python dbgPavim.command(\"step_into\")<cr>',
-      \ g:dbgPavimKeyStepOver : ':python dbgPavim.command(\"step_over\")<cr>',
-      \ g:dbgPavimKeyStepOut : ':python dbgPavim.command(\"step_out\")<cr>',
-      \ g:dbgPavimKeyEval : ':python dbgPavim.watch_input(\"eval\")<cr>A',
-      \ g:dbgPavimKeyRelayout : ':python dbgPavim.ui.reLayout()<cr>',
-      \ g:dbgPavimKeyContextGet : ':python dbgPavim.context()<cr>',
-      \ g:dbgPavimKeyPropertyGet : ':python dbgPavim.property()<cr>',
-      \ }
-for key in keys(s:keyMappings)
-  exec 'nnoremap <expr> <silent> '.key.' (exists("g:dbgPavimTab")==1 && g:dbgPavimTab == tabpagenr() ? "'.s:keyMappings[key].'" : "'.key.'")'
-endfor
-exec 'vnoremap '.g:dbgPavimKeyPropertyGet.' "vy:python dbgPavim.property("%v%")<CR>'
-exec 'vnoremap '.g:dbgPavimKeyEval.' "vy:python dbgPavim.watch_input("eval", "%v%")<CR>$a<CR>'
-command! -nargs=0 Up python dbgPavim.up()
-command! -nargs=0 Dn python dbgPavim.down()
-command! -nargs=? Pg python dbgPavim.property("<args>")
+let s:dbgpavim_py_loaded = 0
+function! s:LoadDBGPavim()
+  if s:dbgpavim_py_loaded == 0
+    if filereadable(s:dbgpavim_py)
+      exec 'pyfile '.s:dbgpavim_py
+      python dbgPavim_init()
+      let s:dbgpavim_py_loaded = 1
+      autocmd VimLeavePre * python dbgPavim.quit()
+      autocmd TabEnter * python dbgPavim.updateStatusLine()
+      exec 'nnoremap <silent> '.g:dbgPavimKeyQuit.' :python dbgPavim.quit()<cr>'
+      exec 'nnoremap <silent> '.g:dbgPavimKeyToggleBae.' :call <SID>Bae()<cr>'
+      exec 'nnoremap <silent> '.g:dbgPavimKeyLargeWindow.' :call <SID>ResizeWindow("+")<cr>'
+      exec 'nnoremap <silent> '.g:dbgPavimKeySmallWindow.' :call <SID>ResizeWindow("-")<cr>'
+      exec 'nnoremap <buffer> <silent> '.g:dbgPavimKeyToggleBp.' :python dbgPavim.mark()<cr>'
 
-function! ResizeWindow(flag)
+      command! -nargs=? Bp python dbgPavim.mark('<args>')
+      command! -nargs=0 Bl python dbgPavim.list()
+      command! -nargs=0 Bc python dbgPavim.clear()
+      command! -nargs=0 Bu python dbgPavim.unclear()
+      command! -nargs=? Wc python dbgPavim.watch("<args>")
+      command! -nargs=? We python dbgPavim.eval("<args>")
+      command! -nargs=0 Wl python dbgPavim.listWatch()
+      command! -nargs=1 Children let g:dbgPavimMaxChildren=<args>|python dbgPavim.setMaxChildren()
+      command! -nargs=1 Depth let g:dbgPavimMaxDepth=<args>|python dbgPavim.setMaxDepth()
+      command! -nargs=1 Length let g:dbgPavimMaxData=<args>|python dbgPavim.setMaxData()
+
+      command! -nargs=0 Up python dbgPavim.session_command("up")
+      command! -nargs=0 Dn python dbgPavim.session_command("down")
+      command! -nargs=? Pg python dbgPavim.session_command("property_get", "<args>")
+      set laststatus=2
+    else
+      call confirm('dbgpavim.vim: Unable to find '.s:dbgpavim_py.'. Place it in either your home vim directory or in the Vim runtime directory.', 'OK')
+    endif
+  endif
+  return s:dbgpavim_py_loaded
+endfunction
+
+function! s:ExeDBGPavim(method)
+  if <SID>LoadDBGPavim() == 1
+    exec 'python dbgPavim.'.a:method.'()'
+  endif
+endfunction
+
+exec 'nnoremap <silent> '.g:dbgPavimKeyRun.' :call <SID>ExeDBGPavim("run")<cr>'
+exec 'nnoremap <silent> '.g:dbgPavimKeyToggleBp.' :call <SID>ExeDBGPavim("mark")<cr>'
+command! -nargs=? Bp :call <SID>ExeDBGPavim("mark")
+command! -nargs=? Dp :call <SID>ExeDBGPavim("cli")
+
+function! s:ResizeWindow(flag)
   let l:width = winwidth("%")
   if l:width == &columns
     execute 'resize '.a:flag.'5'
@@ -202,44 +214,62 @@ function! ResizeWindow(flag)
     execute 'vertical resize '.a:flag.'5'
   endif
 endfunction
-function! Bae()
+function! s:Bae()
   let g:dbgPavimBreakAtEntry = (g:dbgPavimBreakAtEntry == 1) ? 0 : 1
   execute 'python dbgPavim.breakAtEntry = '.g:dbgPavimBreakAtEntry
 endfunction
-function! WatchWindowOnEnter()
+
+function! dbgpavim#bindKeys()
+  let s:keyMappings = {
+        \ g:dbgPavimKeyHelp : ':python dbgPavim.session_command("help")<cr>',
+        \ g:dbgPavimKeyStepInto : ':python dbgPavim.d_command("step_into")<cr>',
+        \ g:dbgPavimKeyStepOver : ':python dbgPavim.d_command("step_over")<cr>',
+        \ g:dbgPavimKeyStepOut : ':python dbgPavim.d_command("step_out")<cr>',
+        \ g:dbgPavimKeyEval : ':python dbgPavim.watch_input("eval")<cr>A',
+        \ g:dbgPavimKeyRelayout : ':python dbgPavim.session_command("reLayout")<cr>',
+        \ g:dbgPavimKeyContextGet : ':python dbgPavim.context()<cr>',
+        \ g:dbgPavimKeyPropertyGet : ':python dbgPavim.session_command("property_get", "")<cr>',
+        \ }
+  for key in keys(s:keyMappings)
+    exec 'nnoremap <buffer> <silent> '.key.' '.s:keyMappings[key]
+  endfor
+  exec 'vnoremap <buffer> '.g:dbgPavimKeyPropertyGet.' "vy:python dbgPavim.session_command("property_get","%v%")<CR>'
+  exec 'vnoremap <buffer> '.g:dbgPavimKeyEval.' "vy:python dbgPavim.watch_input("eval", "%v%")<CR>$a<CR>'
+endfunction
+
+function! dbgpavim#WatchWindowOnEnter()
   let l:line = getline(".")
   if l:line =~ "^\\s*.* = (.*)+;$"
     let l:var = substitute(line,"\\s*\\(\\S.*\\S\\)\\s*=.*","\\1","g")
     let l:var = substitute(l:var,"'","\\\\'","g")
-    execute "python dbgPavim.debugSession.expandVar('".l:var."')"
+    execute "python dbgPavim.session_command('expandVar', '".l:var."')"
     execute "normal \<c-w>p"
   elseif l:line =~ "^\\d\\+  .*:\\d\\+$"
     let fn = substitute(l:line,"^\\d\\+  \\(.*\\):\\d\\+$","\\1","")
     let ln = substitute(l:line,"^\\d\\+  .*:\\(\\d\\+\\)$","\\1","")
-    execute 'python dbgPavim.debugSession.jump("'.l:fn.'",'.l:ln.')'
+    execute 'python dbgPavim.session_command("jump","'.l:fn.'",'.l:ln.')'
   elseif foldlevel(".") > 0
     execute 'normal za'
   endif
 endfunction
-function! StackWindowOnEnter()
+function! dbgpavim#StackWindowOnEnter()
   let l:stackNo = substitute(getline("."),"\\(\\d\\+\\)\\s\\+.*","\\1","g")
   if l:stackNo =~ "^\\d\\+$"
-    execute 'python dbgPavim.debugSession.go('.l:stackNo.')'
+    execute 'python dbgPavim.session_command("go", '.l:stackNo.')'
     execute "normal \<c-w>p"
   endif
 endfunction
 
-function! CheckPydbgp()
+function! dbgpavim#CheckPydbgp()
   let l:ret = 0
-  let l:pydbgp = expand('`pydbgp -h`')
-  if l:pydbgp == ''
-    echo "Please install Komodo Python Remote Debugging Client."
+  let l:pydbgp = executable('pydbgp')
+  if l:pydbgp == 0
+    echo "Please install Komodo Python Remote Debugging Client, or run: /path/to/pydbgp.py ".expand('%:p')
     let l:ret = 1
   endif
   return l:ret
 endfunction
-
-function! CheckXdebug()
+function! dbgpavim#CheckXdebug()
   let l:ret = 0
   let l:phpinfo = system('php -r "phpinfo();"')
   let l:port = matchstr(l:phpinfo, 'xdebug.remote_port => \d\+')
@@ -255,7 +285,7 @@ function! CheckXdebug()
   endif
   return l:ret
 endfunction
-function! Signs()
+function! dbgpavim#Signs()
   let l:signs = ''
   redir => l:signs
   silent exec 'sign place buffer='.bufnr('%')
@@ -282,11 +312,3 @@ if !hlexists('DbgBreakPt')
 endif
 sign define current text=->  texthl=DbgCurrent linehl=DbgCurrent
 sign define breakpt text=B>  texthl=DbgBreakPt linehl=DbgBreakPt
-
-set laststatus=2
-python dbgPavim_init()
-
-autocmd BufEnter WATCH_WINDOW map <silent> <buffer> <Enter> :call WatchWindowOnEnter()<CR>
-autocmd BufEnter STACK_WINDOW map <silent> <buffer> <Enter> :call StackWindowOnEnter()<CR>
-autocmd BufLeave HELP__WINDOW :python dbgPavim.ui.helpwin=None
-autocmd VimLeavePre * python dbgPavim.quit()
