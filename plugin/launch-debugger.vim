@@ -1,7 +1,7 @@
 " DBGPavim wrapper client: a remote debugger interface to the DBGp protocol
 "
-" This plugin allows a trigger to source the dbgpavim plugin so the F-keys are
-" not used up by debugger commands until you need them.
+" This plugin provides a trigger to source the dbgpavim plugin so the F-keys are
+" not used up by debugger commands until you need the debugger.
 "
 " Use command `LaunchDebugger` to save the current mappings and load the debugger.
 " Use command `ExitDebugger` to revert back to your saved mappings.
